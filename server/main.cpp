@@ -31,10 +31,20 @@ int main()
 	}
 
 	const auto clientSocket = accept(serverSocket, nullptr, nullptr);
-	
-	char buffer[1024] = {};
-	recv(clientSocket, buffer, sizeof(buffer), 0);
-	std::cout << "Message from client: " << buffer << std::endl;
+
+	char buffer[1024];
+
+	while (true)
+	{
+		buffer[0] = '\0';
+
+		const auto buffer_count = recv(clientSocket, buffer, sizeof(buffer), 0);
+
+		if (buffer_count == 0)
+			continue;
+
+		std::cout << "Message from client: " << buffer << std::endl;
+	}
 
 	close(serverSocket);
 

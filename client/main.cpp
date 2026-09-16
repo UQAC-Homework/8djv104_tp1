@@ -23,11 +23,22 @@ int main()
 		sizeof(serverAddress)
 	);
 
-	constexpr auto message = "Hello, server!";
-	send(clientSocket, message, strlen(message), 0);
+	while (true)
+	{
+		char buffer[1024];
+		std::cin.getline(buffer, sizeof(buffer));
+
+		if (strcmp(buffer, "/quit") == 0 || strcmp(buffer, "/exit") == 0)
+		{
+			constexpr auto exit_message = "Bye bye";
+			send(clientSocket, exit_message, strlen(exit_message), 0);
+			break;
+		}
+		
+		send(clientSocket, buffer, sizeof(buffer), 0);
+	}
 
 	close(clientSocket);
 
-	std::cout << "Hello, World! From clients" << std::endl;
 	return 0;
 }
