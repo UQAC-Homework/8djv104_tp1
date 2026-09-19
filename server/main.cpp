@@ -1,5 +1,5 @@
+#include <cstring>
 #include <iostream>
-#include <ranges>
 #include <sstream>
 #include <unordered_map>
 
@@ -102,12 +102,18 @@ int main()
 		{
 			auto [username, _] = clients.at(identifier);
 
-			message = "[" + username + "]: " + buffer;
+			if (strcmp(buffer, "/quit") == 0 || strcmp(buffer, "/exit") == 0)
+			{
+				message = "User '" + username + "' has left the room.";
+				clients.erase(identifier);
+			}
+			else
+				message = "[" + username + "]: " + buffer;
 		}
 
-		for (const auto& client : clients)
+		for (const auto& [client_id, client_info] : clients)
 		{
-			if (client.first == identifier)
+			if (client_id == identifier)
 				continue;
 
 			// Send message to client
@@ -118,8 +124,8 @@ int main()
 					message.c_str(),
 					message.length(),
 					0,
-					(sockaddr*)&client.second.address,
-					sizeof(client.second.address)
+					reinterpret_cast<const sockaddr*>(&client_info.address),
+					sizeof(client_info.address)
 				);
 
 				i += sent_bytes_count;
