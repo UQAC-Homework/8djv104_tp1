@@ -52,14 +52,23 @@ int main()
 		return 1;
 	}
 
-	const std::string message = "This is my message";
+	char buffer[1024];
 
-	auto _ = send(
-		socket,
-		message.c_str(),
-		message.length(),
-		0
-	);
+	while (true)
+	{
+		std::cout << "> ";
+		std::cin >> buffer;
+
+		const std::string message = "This is my message";
+
+		auto _ = send(
+			socket,
+			buffer,
+			sizeof(buffer),
+			0
+		);
+	}
+
 
 	return 0;
 }
