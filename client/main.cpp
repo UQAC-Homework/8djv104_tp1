@@ -73,7 +73,18 @@ int main()
 			i += bytes_count;
 		}
 
-		//
+		// Receive reply from server
+		socklen_t c = sizeof(server_address);
+		ssize_t n = recvfrom(
+			socket,
+			buffer,
+			sizeof(buffer),
+			0,
+			reinterpret_cast<sockaddr*>(&server_address),
+			&c
+		);
+		
+		std::cout << buffer << std::endl;
 	}
 
 

@@ -55,22 +55,39 @@ int main()
 
 	while (true)
 	{
-		const auto bytes_count = recvfrom(
+		// Read incoming message
+		sockaddr_in client_address{};
+		socklen_t client_address_length = sizeof(client_address);
+
+		const auto received_bytes_count = recvfrom(
 			socket,
 			buffer,
 			sizeof(buffer),
 			0,
-			nullptr,
-			nullptr
+			reinterpret_cast<sockaddr*>(&client_address),
+			&client_address_length
 		);
 
-		if (bytes_count == -1)
+		if (received_bytes_count == -1)
 		{
 			perror("Failed to read from socket.");
 			return 1;
 		}
 
-		buffer[bytes_count] = '\0';
+		// Send message to client
+		for (size_t i = 0; i < sizeof(buffer);)
+		{
+			const auto sent_bytes_count = sendto(
+				socket,
+				buffer,
+				received_bytes_count,
+				0,
+				reinterpret_cast<sockaddr*>(&client_address),
+				client_address_length
+			);
+
+			i += sent_bytes_count;
+		}
 
 		std::cout << buffer << std::endl;
 	}
