@@ -1,3 +1,4 @@
+#include <cstring>
 #include <iostream>
 #include <thread>
 
@@ -13,6 +14,40 @@ using SOCKET = int;
 #endif
 
 #define PORT 9999
+
+static void receiveIncomingMessages(
+	const SOCKET socket,
+	const sockaddr_in address,
+	bool const* terminate
+)
+{
+	sockaddr_in server_address = address;
+	socklen_t server_address_length = sizeof(server_address);
+
+	char buffer[1024];
+
+	while (terminate != nullptr && !*terminate)
+	{
+		// Read from socket
+		const auto bytes_count = recvfrom(
+			socket,
+			buffer,
+			sizeof(buffer),
+			0,
+			reinterpret_cast<sockaddr*>(&server_address),
+			&server_address_length
+		);
+
+		if (bytes_count == -1)
+		{
+			std::cerr << "An error occurred while reading from socket." << std::endl;
+			continue;
+		}
+
+		// Print message
+		std::cout << buffer << std::endl;
+	}
+}
 
 int main()
 {
@@ -52,6 +87,12 @@ int main()
 		return 1;
 	}
 
+	bool terminate = false;
+	std::thread receiveMessage([socket, server_address, terminate]
+	{
+		receiveIncomingMessages(socket, server_address, &terminate);
+	});
+
 	char buffer[1024];
 
 	while (true)
@@ -73,20 +114,15 @@ int main()
 			i += bytes_count;
 		}
 
-		// Receive reply from server
-		socklen_t c = sizeof(server_address);
-		ssize_t n = recvfrom(
-			socket,
-			buffer,
-			sizeof(buffer),
-			0,
-			reinterpret_cast<sockaddr*>(&server_address),
-			&c
-		);
-
-		std::cout << buffer << std::endl;
+		if (strcmp(buffer, "quit") == 0)
+			break;
 	}
 
+	// Terminate and wait for thread
+	terminate = true;
+	receiveMessage.join();
+
+	close(socket);
 
 	return 0;
 }
