@@ -1,4 +1,6 @@
 #include <iostream>
+#include <ranges>
+#include <unordered_map>
 
 #if defined(_WIN32)
 #include <winsock2.h>
@@ -12,7 +14,7 @@ using SOCKET = int;
 
 #define PORT 9999
 
-int main(const int argc, char* argv[])
+int main()
 {
 	const SOCKET server_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
@@ -41,6 +43,7 @@ int main(const int argc, char* argv[])
 
 	std::cout << "UDP server listening on port " << PORT << "..." << std::endl;
 
+	std::unordered_map<int64_t, std::string> clients = {};
 	sockaddr_in client_address{};
 	socklen_t client_address_length = sizeof(client_address);
 
@@ -48,7 +51,7 @@ int main(const int argc, char* argv[])
 
 	while (true)
 	{
-		const ssize_t bytes_count = recvfrom(
+		const auto bytes_count = recvfrom(
 			server_socket,
 			buffer,
 			sizeof(buffer) - 1,
@@ -66,8 +69,42 @@ int main(const int argc, char* argv[])
 		buffer[bytes_count] = '\0';
 		std::cout << "Received: " << buffer << std::endl;
 
-		// Echo back
-		sendto(server_socket, buffer, bytes_count, 0, reinterpret_cast<sockaddr*>(&client_address), client_address_length);
+		int64_t current_identifier = static_cast<int64_t>(client_address.sin_addr.s_addr) << 32 | client_address.
+			sin_port;
+		const auto current_client = clients.find(current_identifier);
+
+		if (current_client == clients.end())
+		{
+			auto message = "User '" + std::string(buffer) + "' has joined.";
+
+			clients.insert({current_identifier, buffer});
+			sendto(
+				server_socket,
+				message.c_str(),
+				message.length(),
+				0,
+				reinterpret_cast<sockaddr*>(&client_address),
+				client_address_length
+			);
+			continue;
+		}
+
+		auto message = "[" + current_client->second + "]: " + buffer;
+
+		for (const auto& id : clients | std::views::keys)
+		{
+			if (id == current_identifier)
+				continue;
+
+			sendto(
+				server_socket,
+				message.c_str(),
+				message.length(),
+				0,
+				reinterpret_cast<sockaddr*>(&client_address),
+				client_address_length
+			);
+		}
 	}
 
 	return 0;

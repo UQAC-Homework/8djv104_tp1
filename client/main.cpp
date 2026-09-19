@@ -72,21 +72,17 @@ int main()
 		return 1;
 	}
 
-	std::string message;
-
-	std::cout << "Enter message to send (type 'exit' to quit):\n";
-
 	std::thread receive_thread([socket, &server_address]
 	{
 		receiveIncomingMessages(socket, server_address);
 	});
 
+	std::string message;
+
 	while (true)
 	{
+		std::cout << "> ";
 		std::getline(std::cin, message);
-
-		if (message == "exit")
-			break;
 
 		sendto(
 			socket,
@@ -96,7 +92,11 @@ int main()
 			reinterpret_cast<sockaddr*>(&server_address),
 			server_address_length
 		);
+		
+		if (message == "/quit" || message == "/exit")
+			break;
 	}
 
+	receive_thread.join();
 	return 0;
 }
