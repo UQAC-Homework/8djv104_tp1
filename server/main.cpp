@@ -1,5 +1,7 @@
 #include <iostream>
 #include <ranges>
+#include <sstream>
+#include <unordered_map>
 
 #if defined(_WIN32)
 #include <winsock2.h>
@@ -12,6 +14,15 @@ using SOCKET = int;
 #endif
 
 #define PORT 9999
+
+namespace
+{
+	struct ClientInfo
+	{
+		std::string username;
+		sockaddr_in address{};
+	};
+}
 
 int main()
 {
@@ -52,6 +63,7 @@ int main()
 	}
 
 	char buffer[1024];
+	std::unordered_map<ulong, ClientInfo> clients;
 
 	while (true)
 	{
@@ -74,23 +86,50 @@ int main()
 			return 1;
 		}
 
-		// Send message to client
-		for (size_t i = 0; i < sizeof(buffer);)
-		{
-			const auto sent_bytes_count = sendto(
-				socket,
-				buffer,
-				received_bytes_count,
-				0,
-				reinterpret_cast<sockaddr*>(&client_address),
-				client_address_length
-			);
+		ulong identifier = client_address.sin_addr.s_addr << 16 | client_address.sin_port;
+		std::string message;
 
-			i += sent_bytes_count;
+		// Register new client
+		if (!clients.contains(identifier))
+		{
+			const auto client_info = ClientInfo{.username = buffer, .address = client_address};
+			clients[identifier] = client_info;
+
+			message = "User '" + client_info.username + "' has joined the room.";
+		}
+		// Append username
+		else
+		{
+			auto [username, _] = clients.at(identifier);
+
+			message = "[" + username + "]: " + buffer;
+		}
+
+		for (const auto& client : clients)
+		{
+			if (client.first == identifier)
+				continue;
+
+			// Send message to client
+			for (size_t i = 0; i < message.length();)
+			{
+				const auto sent_bytes_count = sendto(
+					socket,
+					message.c_str(),
+					message.length(),
+					0,
+					(sockaddr*)&client.second.address,
+					sizeof(client.second.address)
+				);
+
+				i += sent_bytes_count;
+			}
 		}
 
 		std::cout << buffer << std::endl;
 	}
+
+	close(socket);
 
 	return 0;
 }

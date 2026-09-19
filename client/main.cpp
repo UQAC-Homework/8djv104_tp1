@@ -1,3 +1,4 @@
+#include <atomic>
 #include <cstring>
 #include <iostream>
 #include <thread>
@@ -7,6 +8,7 @@
 #pragma comment(lib, "ws2_32.lib")
 #else
 #include <unistd.h>
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 using SOCKET = int;
@@ -55,8 +57,21 @@ static void receiveIncomingMessages(
 	}
 }
 
-int main()
+int main(const int argc, char* argv[])
 {
+	std::string username = "Player";
+	std::string server_ip = "127.0.0.1";
+	size_t server_port = 9999;
+
+	if (argc > 1)
+		username = argv[1];
+
+	if (argc > 2)
+		server_ip = argv[2];
+
+	if (argc > 3)
+		server_port = strtol(argv[3], nullptr, 10);
+
 	// Create socket
 	const SOCKET socket = ::socket(
 		// IPv4 Internet protocols
@@ -78,8 +93,10 @@ int main()
 	// Connect socket to server
 	sockaddr_in server_address{};
 	server_address.sin_family = AF_INET;
-	server_address.sin_port = htons(9009);
-	server_address.sin_addr.s_addr = htonl(INADDR_ANY);
+	server_address.sin_port = htons(server_port);
+	//server_address.sin_addr.s_addr = htonl(INADDR_ANY);
+
+	const auto c = inet_pton(AF_INET, server_ip.c_str(), &server_address.sin_addr.s_addr);
 
 	const auto connect_error_code = connect(
 		socket,
