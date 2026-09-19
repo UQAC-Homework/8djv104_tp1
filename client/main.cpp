@@ -18,7 +18,7 @@ using SOCKET = int;
 static void receiveIncomingMessages(
 	const SOCKET socket,
 	const sockaddr_in address,
-	bool const* terminate
+	const std::atomic<bool>* terminate
 )
 {
 	sockaddr_in server_address = address;
@@ -26,7 +26,7 @@ static void receiveIncomingMessages(
 
 	char buffer[1024];
 
-	while (terminate != nullptr && !*terminate)
+	while (terminate != nullptr && !terminate->load(std::memory_order_relaxed))
 	{
 		// Read from socket
 		const auto bytes_count = recvfrom(
@@ -40,9 +40,15 @@ static void receiveIncomingMessages(
 
 		if (bytes_count == -1)
 		{
+			// If terminated, ignore
+			if (terminate != nullptr && terminate->load(std::memory_order_relaxed))
+				break;
+
 			std::cerr << "An error occurred while reading from socket." << std::endl;
 			continue;
 		}
+
+		buffer[bytes_count] = '\0';
 
 		// Print message
 		std::cout << buffer << std::endl;
@@ -87,11 +93,8 @@ int main()
 		return 1;
 	}
 
-	bool terminate = false;
-	std::thread receiveMessage([socket, server_address, terminate]
-	{
-		receiveIncomingMessages(socket, server_address, &terminate);
-	});
+	std::atomic terminate = false;
+	std::thread receiveMessage(receiveIncomingMessages, socket, server_address, &terminate);
 
 	char buffer[1024];
 
@@ -119,7 +122,8 @@ int main()
 	}
 
 	// Terminate and wait for thread
-	terminate = true;
+	terminate.store(true, std::memory_order_relaxed);
+	shutdown(socket, SHUT_RDWR);
 	receiveMessage.join();
 
 	close(socket);
