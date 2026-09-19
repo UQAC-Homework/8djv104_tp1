@@ -16,5 +16,50 @@ using SOCKET = int;
 
 int main()
 {
+	// Create socket
+	const SOCKET socket = ::socket(
+		// IPv4 Internet protocols
+		AF_INET,
+
+		// Supports datagrams
+		SOCK_DGRAM,
+
+		// UDP datagram sockets
+		IPPROTO_UDP
+	);
+
+	if (socket == INVALID_SOCKET)
+	{
+		perror("Failed to create a socket.");
+		return 1;
+	}
+
+	// Connect socket to server
+	sockaddr_in server_address{};
+	server_address.sin_family = AF_INET;
+	server_address.sin_port = htons(900);
+	server_address.sin_addr.s_addr = htonl(INADDR_ANY);
+
+	const auto connect_error_code = connect(
+		socket,
+		reinterpret_cast<sockaddr*>(&server_address),
+		sizeof(server_address)
+	);
+
+	if (connect_error_code != 0)
+	{
+		perror("Failed to connect to server.");
+		return 1;
+	}
+
+	const std::string message = "This is my message";
+
+	auto _ = send(
+		socket,
+		message.c_str(),
+		message.length(),
+		0
+	);
+
 	return 0;
 }
