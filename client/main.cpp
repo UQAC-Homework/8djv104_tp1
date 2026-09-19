@@ -114,7 +114,7 @@ int main()
 			i += bytes_count;
 		}
 
-		if (strcmp(buffer, "quit") == 0)
+		if (strcmp(buffer, "/quit") == 0 || strcmp(buffer, "/exit") == 0)
 			break;
 	}
 
