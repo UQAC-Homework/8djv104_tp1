@@ -56,17 +56,24 @@ int main()
 
 	while (true)
 	{
+		// Get user message
 		std::cout << "> ";
-		std::cin >> buffer;
+		std::cin.getline(buffer, sizeof(buffer));
 
-		const std::string message = "This is my message";
+		// Send message to server
+		for (size_t i = 0; i < sizeof(buffer);)
+		{
+			const auto bytes_count = send(
+				socket,
+				buffer + i,
+				sizeof(buffer),
+				0
+			);
 
-		auto _ = send(
-			socket,
-			buffer,
-			sizeof(buffer),
-			0
-		);
+			i += bytes_count;
+		}
+
+		//
 	}
 
 
