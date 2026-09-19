@@ -53,22 +53,27 @@ int main()
 
 	char buffer[1024];
 
-	const auto bytes_count = recvfrom(
-		socket,
-		buffer,
-		sizeof(buffer),
-		0,
-		nullptr,
-		nullptr
-	);
-	
-	if (bytes_count == -1)
+	while (true)
 	{
-		perror("Failed to read from socket.");
-		return 1;
+		const auto bytes_count = recvfrom(
+			socket,
+			buffer,
+			sizeof(buffer),
+			0,
+			nullptr,
+			nullptr
+		);
+
+		if (bytes_count == -1)
+		{
+			perror("Failed to read from socket.");
+			return 1;
+		}
+
+		buffer[bytes_count] = '\0';
+
+		std::cout << buffer << std::endl;
 	}
-	
-	std::cout << buffer << std::endl;
 
 	return 0;
 }
