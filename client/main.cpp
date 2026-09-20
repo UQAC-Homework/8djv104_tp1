@@ -96,7 +96,7 @@ int main(const int argc, char* argv[])
 	server_address.sin_port = htons(server_port);
 	//server_address.sin_addr.s_addr = htonl(INADDR_ANY);
 
-	const auto c = inet_pton(AF_INET, server_ip.c_str(), &server_address.sin_addr.s_addr);
+	inet_pton(AF_INET, server_ip.c_str(), &server_address.sin_addr.s_addr);
 
 	const auto connect_error_code = connect(
 		socket,
@@ -109,6 +109,14 @@ int main(const int argc, char* argv[])
 		perror("Failed to connect to server.");
 		return 1;
 	}
+	
+	// Send username as first message
+	send(
+		socket,
+		username.c_str(),
+		username.length(),
+		0
+	);
 
 	std::atomic terminate = false;
 	std::thread receiveMessage(receiveIncomingMessages, socket, server_address, &terminate);
@@ -122,17 +130,12 @@ int main(const int argc, char* argv[])
 		std::cin.getline(buffer, sizeof(buffer));
 
 		// Send message to server
-		for (size_t i = 0; i < sizeof(buffer);)
-		{
-			const auto bytes_count = send(
-				socket,
-				buffer + i,
-				sizeof(buffer),
-				0
-			);
-
-			i += bytes_count;
-		}
+		send(
+			socket,
+			buffer,
+			sizeof(buffer),
+			0
+		);
 
 		if (strcmp(buffer, "/quit") == 0 || strcmp(buffer, "/exit") == 0)
 			break;
