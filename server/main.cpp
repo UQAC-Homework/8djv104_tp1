@@ -6,11 +6,13 @@
 #if defined(_WIN32)
 #include <winsock2.h>
 #pragma comment(lib, "ws2_32.lib")
+using SOCKET_LENGTH = int;
 #else
 #include <unistd.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 using SOCKET = int;
+using SOCKET_LENGTH = socklen_t;
 #define INVALID_SOCKET (-1)
 #endif
 
@@ -80,7 +82,7 @@ int main()
 	{
 		// Read incoming message
 		sockaddr_in client_address{};
-		socklen_t client_address_length = sizeof(client_address);
+		SOCKET_LENGTH client_address_length = sizeof(client_address);
 
 		const auto received_bytes_count = recvfrom(
 			socket,

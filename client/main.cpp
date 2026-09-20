@@ -6,12 +6,13 @@
 #if defined(_WIN32)
 #include <winsock2.h>
 #pragma comment(lib, "ws2_32.lib")
+using SOCKET_LENGTH = int;
 #else
 #include <unistd.h>
-#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 using SOCKET = int;
+using SOCKET_LENGTH = socklen_t;
 #define INVALID_SOCKET (-1)
 #endif
 
@@ -24,7 +25,7 @@ static void receiveIncomingMessages(
 )
 {
 	sockaddr_in server_address = address;
-	socklen_t server_address_length = sizeof(server_address);
+	SOCKET_LENGTH server_address_length = sizeof(server_address);
 
 	char buffer[1024];
 
