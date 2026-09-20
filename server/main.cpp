@@ -29,6 +29,7 @@ int main()
 {
 #if defined(_WIN32)
 	WSADATA wsaData;
+
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 	{
 		std::cerr << "WSAStartup failed.\n";

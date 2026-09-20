@@ -72,6 +72,16 @@ int main(const int argc, char* argv[])
 	if (argc > 3)
 		server_port = strtol(argv[3], nullptr, 10);
 
+#if defined(_WIN32)
+	WSADATA wsaData;
+
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+	{
+		std::cerr << "WSAStartup failed.\n";
+		return 1;
+	}
+#endif
+
 	// Create socket
 	const SOCKET socket = ::socket(
 		// IPv4 Internet protocols
@@ -109,7 +119,7 @@ int main(const int argc, char* argv[])
 		perror("Failed to connect to server.");
 		return 1;
 	}
-	
+
 	// Send username as first message
 	send(
 		socket,
@@ -129,6 +139,12 @@ int main(const int argc, char* argv[])
 		std::cout << "> ";
 		std::cin.getline(buffer, sizeof(buffer));
 
+		if (std::cin.fail())
+		{
+			perror("Failed to read from user.");
+			break;
+		}
+
 		// Send message to server
 		send(
 			socket,
@@ -143,10 +159,19 @@ int main(const int argc, char* argv[])
 
 	// Terminate and wait for thread
 	terminate.store(true, std::memory_order_relaxed);
+#if defined(_WIN32)
+	shutdown(socket, SD_BOTH);
+#else
 	shutdown(socket, SHUT_RDWR);
+#endif
 	receiveMessage.join();
 
+#if defined(_WIN32)
+	closesocket(socket);
+	WSACleanup();
+#else
 	close(socket);
+#endif
 
 	return 0;
 }
