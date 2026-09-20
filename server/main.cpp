@@ -37,7 +37,7 @@ int main(const int argc, char* argv[])
 
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 	{
-		std::cerr << "WSAStartup failed.\n";
+		perror("WSAStartup failed.");
 		return 1;
 	}
 #endif
