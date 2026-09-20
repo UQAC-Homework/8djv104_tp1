@@ -163,6 +163,9 @@ int main(const int argc, char* argv[])
 			break;
 	}
 
+	// Terminate receiving thread
+	terminate.store(true, std::memory_order_relaxed);
+
 	// Close socket
 #if defined(_WIN32)
 	shutdown(socket, SD_BOTH);
@@ -173,8 +176,7 @@ int main(const int argc, char* argv[])
 	close(socket);
 #endif
 
-	// Terminate and wait for thread
-	terminate.store(true, std::memory_order_relaxed);
+	// Wait for thread
 	receiveMessage.join();
 
 	return 0;
