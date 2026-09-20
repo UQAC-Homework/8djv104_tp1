@@ -16,8 +16,6 @@ using SOCKET_LENGTH = socklen_t;
 #define INVALID_SOCKET (-1)
 #endif
 
-#define PORT 9999
-
 namespace
 {
 	struct ClientInfo
@@ -27,8 +25,13 @@ namespace
 	};
 }
 
-int main()
+int main(const int argc, char* argv[])
 {
+	size_t server_port = 9999;
+
+	if (argc > 1)
+		server_port = strtol(argv[1], nullptr, 10);
+
 #if defined(_WIN32)
 	WSADATA wsaData;
 
@@ -59,7 +62,7 @@ int main()
 
 	sockaddr_in server_address{};
 	server_address.sin_family = AF_INET;
-	server_address.sin_port = htons(PORT);
+	server_address.sin_port = htons(server_port);
 	server_address.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	// Bind socket to address
