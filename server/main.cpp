@@ -99,7 +99,8 @@ int main()
 			return 1;
 		}
 
-		buffer[received_bytes_count] = '\0';
+		if (received_bytes_count < sizeof(buffer))
+			buffer[received_bytes_count] = '\0';
 
 		uint32_t identifier = (static_cast<uint64_t>(client_address.sin_addr.s_addr) << 16) | client_address.sin_port;
 		std::string message;

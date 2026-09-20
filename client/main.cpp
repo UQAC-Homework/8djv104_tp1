@@ -51,7 +51,8 @@ static void receiveIncomingMessages(
 			continue;
 		}
 
-		buffer[bytes_count] = '\0';
+		if (bytes_count < sizeof(buffer))
+			buffer[bytes_count] = '\0';
 
 		// Print message
 		std::cout << buffer << std::endl;
