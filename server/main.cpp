@@ -145,8 +145,6 @@ int main(const int argc, char* argv[])
 				sizeof(client_info.address)
 			);
 		}
-
-		std::cout << buffer << std::endl;
 	}
 
 #if defined(_WIN32)
