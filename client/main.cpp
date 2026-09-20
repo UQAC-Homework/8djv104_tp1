@@ -163,21 +163,19 @@ int main(const int argc, char* argv[])
 			break;
 	}
 
-	// Terminate and wait for thread
-	terminate.store(true, std::memory_order_relaxed);
+	// Close socket
 #if defined(_WIN32)
 	shutdown(socket, SD_BOTH);
-#else
-	shutdown(socket, SHUT_RDWR);
-#endif
-	receiveMessage.join();
-
-#if defined(_WIN32)
 	closesocket(socket);
 	WSACleanup();
 #else
+	shutdown(socket, SHUT_RDWR);
 	close(socket);
 #endif
+
+	// Terminate and wait for thread
+	terminate.store(true, std::memory_order_relaxed);
+	receiveMessage.join();
 
 	return 0;
 }
