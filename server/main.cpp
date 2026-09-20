@@ -9,6 +9,7 @@
 #else
 #include <unistd.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
 using SOCKET = int;
 #define INVALID_SOCKET (-1)
 #endif
@@ -26,6 +27,15 @@ namespace
 
 int main()
 {
+#if defined(_WIN32)
+	WSADATA wsaData;
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+	{
+		std::cerr << "WSAStartup failed.\n";
+		return 1;
+	}
+#endif
+
 	// Create socket
 	const SOCKET socket = ::socket(
 		// IPv4 Internet protocols
@@ -63,7 +73,7 @@ int main()
 	}
 
 	char buffer[1024];
-	std::unordered_map<ulong, ClientInfo> clients;
+	std::unordered_map<uint32_t, ClientInfo> clients;
 
 	while (true)
 	{
@@ -86,7 +96,9 @@ int main()
 			return 1;
 		}
 
-		ulong identifier = client_address.sin_addr.s_addr << 16 | client_address.sin_port;
+		buffer[received_bytes_count] = '\0';
+
+		uint32_t identifier = (static_cast<uint64_t>(client_address.sin_addr.s_addr) << 16) | client_address.sin_port;
 		std::string message;
 
 		// Register new client
@@ -117,25 +129,25 @@ int main()
 				continue;
 
 			// Send message to client
-			for (size_t i = 0; i < message.length();)
-			{
-				const auto sent_bytes_count = sendto(
-					socket,
-					message.c_str(),
-					message.length(),
-					0,
-					reinterpret_cast<const sockaddr*>(&client_info.address),
-					sizeof(client_info.address)
-				);
-
-				i += sent_bytes_count;
-			}
+			const auto _ = sendto(
+				socket,
+				message.c_str(),
+				message.length(),
+				0,
+				reinterpret_cast<const sockaddr*>(&client_info.address),
+				sizeof(client_info.address)
+			);
 		}
 
 		std::cout << buffer << std::endl;
 	}
 
+#if defined(_WIN32)
+	closesocket(socket);
+	WSACleanup();
+#else
 	close(socket);
+#endif
 
 	return 0;
 }
