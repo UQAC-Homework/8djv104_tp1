@@ -9,6 +9,7 @@
 using SOCKET_LENGTH = int;
 #else
 #include <unistd.h>
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 using SOCKET = int;
@@ -106,9 +107,12 @@ int main(const int argc, char* argv[])
 	sockaddr_in server_address{};
 	server_address.sin_family = AF_INET;
 	server_address.sin_port = htons(server_port);
-	//server_address.sin_addr.s_addr = htonl(INADDR_ANY);
 
+#if defined(_WIN32)
+	server_address.sin_addr.s_addr = inet_addr(server_ip.c_str());
+#else
 	inet_pton(AF_INET, server_ip.c_str(), &server_address.sin_addr.s_addr);
+#endif
 
 	const auto connect_error_code = connect(
 		socket,
