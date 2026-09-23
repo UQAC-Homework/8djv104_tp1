@@ -111,7 +111,8 @@ int main(const int argc, char* argv[])
 		std::string message;
 
 		// Register new client
-		if (!clients.contains(identifier))
+		// ReSharper disable once CppUseAssociativeContains
+		if (clients.find(identifier) == clients.end())
 		{
 			const auto client_info = ClientInfo{.username = buffer, .address = client_address};
 			clients[identifier] = client_info;
