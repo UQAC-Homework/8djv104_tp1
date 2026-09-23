@@ -17,8 +17,6 @@ using SOCKET_LENGTH = socklen_t;
 #define INVALID_SOCKET (-1)
 #endif
 
-#define PORT 9999
-
 static void receiveIncomingMessages(
 	const SOCKET socket,
 	const sockaddr_in address,
@@ -62,6 +60,7 @@ static void receiveIncomingMessages(
 
 int main(const int argc, char* argv[])
 {
+	// Parse arguments
 	std::string username = "Player";
 	std::string server_ip = "127.0.0.1";
 	size_t server_port = 9999;
@@ -75,6 +74,7 @@ int main(const int argc, char* argv[])
 	if (argc > 3)
 		server_port = strtol(argv[3], nullptr, 10);
 
+	// Set up
 #if defined(_WIN32)
 	WSADATA wsaData;
 

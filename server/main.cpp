@@ -27,11 +27,13 @@ namespace
 
 int main(const int argc, char* argv[])
 {
+	// Parse arguments
 	size_t server_port = 9999;
 
 	if (argc > 1)
 		server_port = strtol(argv[1], nullptr, 10);
 
+	// Set up
 #if defined(_WIN32)
 	WSADATA wsaData;
 
@@ -116,16 +118,17 @@ int main(const int argc, char* argv[])
 
 			message = "User '" + client_info.username + "' has joined the room.";
 		}
-		// Append username
 		else
 		{
 			auto [username, _] = clients.at(identifier);
 
+			// Unregister client
 			if (strcmp(buffer, "/quit") == 0 || strcmp(buffer, "/exit") == 0)
 			{
 				message = "User '" + username + "' has left the room.";
 				clients.erase(identifier);
 			}
+			// Append username
 			else
 				message = "[" + username + "]: " + buffer;
 		}
@@ -147,6 +150,7 @@ int main(const int argc, char* argv[])
 		}
 	}
 
+	// Close socket
 #if defined(_WIN32)
 	closesocket(socket);
 	WSACleanup();
